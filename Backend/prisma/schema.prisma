@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  firstName String
+  lastName  String
+  contactNo String
+  email     String    @unique
+  password  String
+
+  addresses Address[]
+  cart      CartItem[]
+  orders    Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  addressLine1 String
+  addressLine2 String?
+  city         String
+  pincode      Int
+  state        String
+  country      String   @default("India")
+  isDefault    Boolean  @default(false)
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model CartItem {
+  id        Int     @id @default(autoincrement())
+  userId    String
+  productId Int
+  variantId Int
+  quantity  Int
+  totalPrice Decimal @db.Decimal(12, 2)
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, variantId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  categoryId  Int
+  skuNo       String   @unique
+  inStock     Int      @default(0)
+
+  category   Category        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  variants   ProductVariant[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+model ProductVariant {
+  id          Int      @id @default(autoincrement())
+  productId   Int
+  name        String
+  color       String?
+  price       Decimal  @db.Decimal(12, 2)
+  inStock     Int      @default(0)
+  description String?
+  isPrimary   Boolean  @default(false)
+  images      Json?
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model Order {
+  id                       Int      @id @default(autoincrement())
+  userId                   String
+  addressId                Int?
+  totalPrice               Decimal  @db.Decimal(12, 2)
+  paymentBy                String
+  paymentStatus            PaymentStatus   @default(PENDING)
+  initialPaymentStatus     PaymentStatus   @default(PENDING)
+  remainingPaymentStatus   PaymentStatus   @default(PENDING)
+  codInitialChargesPercent Decimal? @db.Decimal(5, 2)
+  codInitialCharges        Decimal? @db.Decimal(12, 2)
+  codRemainingCharges      Decimal? @db.Decimal(12, 2)
+  userStatus               UserOrderStatus  @default(PENDING)
+  adminStatus              AdminOrderStatus @default(PENDING)
+  addressLine1             String
+  addressLine2             String?
+  city                     String
+  pincode                  Int
+  state                    String
+  country                  String   @default("India")
+  paymentId                String?
+  transactionId            String?
+  transactionDetails       Json?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  address Address? @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  items   OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([paymentStatus])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  variantId   Int
+  productName String
+  sku         String
+  description String?
+  color       String?
+  quantity    Int
+  price       Decimal  @db.Decimal(12, 2)
+  totalPrice  Decimal  @db.Decimal(12, 2)
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admins")
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+}
+
+enum UserOrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum AdminOrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
