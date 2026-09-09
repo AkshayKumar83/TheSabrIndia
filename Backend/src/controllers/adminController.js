@@ -21,12 +21,16 @@ function getRequiredString(value) {
 
 async function register(req, res) {
   try {
-    const name = getRequiredString(req.body.name);
+    const firstName = getRequiredString(req.body.firstName);
+    const lastName = getRequiredString(req.body.lastName);
     const email = getRequiredString(req.body.email).toLowerCase();
+    const contactNo = getRequiredString(req.body.contactNo);
     const password = getRequiredString(req.body.password);
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'name, email and password are required' });
+    if (!firstName || !lastName || !email || !contactNo || !password) {
+      return res.status(400).json({
+        message: 'firstName, lastName, email, contactNo and password are required',
+      });
     }
 
     if (!/^\S+@\S+\.\S+$/.test(email)) {
@@ -44,7 +48,7 @@ async function register(req, res) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const admin = await prisma.admin.create({
-      data: { name, email, password: hashedPassword },
+      data: { firstName, lastName, email, contactNo, password: hashedPassword },
     });
 
     return res.status(201).json({
@@ -89,4 +93,26 @@ async function login(req, res) {
   }
 }
 
-export { register, login };
+async function listAdmins(req, res) {
+  try {
+    const admins = await prisma.admin.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        contactNo: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json({ admins });
+  } catch (error) {
+    console.error('List admins error:', error);
+    return res.status(500).json({ message: 'Unable to fetch admins' });
+  }
+}
+
+export { register, login, listAdmins };

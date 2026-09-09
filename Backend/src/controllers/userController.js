@@ -93,4 +93,26 @@ async function login(req, res) {
   }
 }
 
-export { signup, login };
+async function listUsers(req, res) {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        contactNo: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return res.json({ users });
+  } catch (error) {
+    console.error('List users error:', error);
+    return res.status(500).json({ message: 'Unable to fetch users' });
+  }
+}
+
+export { signup, login, listUsers };

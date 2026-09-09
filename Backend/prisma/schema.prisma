@@ -180,8 +180,10 @@ model OrderItem {
 
 model Admin {
   id        Int      @id @default(autoincrement())
-  name      String
+  firstName      String
+  lastName   String
   email     String   @unique
+  contactNo String
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
