@@ -115,4 +115,115 @@ async function listAdmins(req, res) {
   }
 }
 
-export { register, login, listAdmins };
+async function getAdminById(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: 'Admin ID must be a positive integer' });
+  }
+
+  try {
+    const admin = await prisma.admin.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        contactNo: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    return res.json({ admin });
+  } catch (error) {
+    console.error('Get admin error:', error);
+    return res.status(500).json({ message: 'Unable to fetch admin' });
+  }
+}
+
+async function updateAdmin(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: 'Admin ID must be a positive integer' });
+  }
+
+  const data = {};
+  const fields = ['firstName', 'lastName', 'contactNo'];
+
+  for (const field of fields) {
+    if (req.body[field] !== undefined) {
+      const value = getRequiredString(req.body[field]);
+      if (!value) {
+        return res.status(400).json({ message: `${field} cannot be empty` });
+      }
+      data[field] = value;
+    }
+  }
+
+  if (req.body.email !== undefined) {
+    const email = getRequiredString(req.body.email).toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      return res.status(400).json({ message: 'Please provide a valid email' });
+    }
+    data.email = email;
+  }
+
+  if (req.body.password !== undefined) {
+    const password = getRequiredString(req.body.password);
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+    data.password = await bcrypt.hash(password, 12);
+  }
+
+  if (Object.keys(data).length === 0) {
+    return res.status(400).json({
+      message: 'Provide firstName, lastName, email, contactNo or password to update',
+    });
+  }
+
+  try {
+    const admin = await prisma.admin.update({ where: { id }, data });
+
+    return res.json({
+      message: 'Admin updated successfully',
+      admin: publicAdmin(admin),
+    });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.status(409).json({ message: 'Admin email is already registered' });
+    }
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    console.error('Update admin error:', error);
+    return res.status(500).json({ message: 'Unable to update admin' });
+  }
+}
+
+async function deleteAdmin(req, res) {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: 'Admin ID must be a positive integer' });
+  }
+
+  try {
+    await prisma.admin.delete({ where: { id } });
+    return res.json({ message: 'Admin deleted successfully' });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    console.error('Delete admin error:', error);
+    return res.status(500).json({ message: 'Unable to delete admin' });
+  }
+}
+
+export { register, login, listAdmins, getAdminById, updateAdmin, deleteAdmin };

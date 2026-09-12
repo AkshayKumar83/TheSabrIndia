@@ -3,14 +3,17 @@ import express from 'express';
 import cors from 'cors';
 import userRoutes from './src/routes/userRoutes.js';
 import adminRoutes from './src/routes/adminRoutes.js';
+import categoryRoutes from './src/routes/categoryRoutes.js';
+import { notFoundHandler } from './utils/middleware.js';
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 6000;
+const port = process.env.PORT || 8090;
 
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 app.get('/api/health', (req, res) => {
   res.json({ message: 'API is running' });
@@ -18,6 +21,8 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use(notFoundHandler);
 
 app.use((error, req, res, next) => {
   console.error(error);
