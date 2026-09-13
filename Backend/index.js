@@ -4,6 +4,7 @@ import cors from 'cors';
 import userRoutes from './src/routes/userRoutes.js';
 import adminRoutes from './src/routes/adminRoutes.js';
 import categoryRoutes from './src/routes/categoryRoutes.js';
+import productRoutes from './src/routes/productRoutes.js';
 import { notFoundHandler } from './utils/middleware.js';
 
 dotenv.config();
@@ -22,6 +23,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/products', productRoutes);
 app.use(notFoundHandler);
 
 app.use((error, req, res, next) => {

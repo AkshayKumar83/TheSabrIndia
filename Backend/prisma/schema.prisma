@@ -108,7 +108,7 @@ model ProductVariant {
   price       Decimal  @db.Decimal(12, 2)
   inStock     Int      @default(0)
   description String?
-  isPrimary   Boolean  @default(false)
+  isPrimary   Int  @default(0)
   images      Json?
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)

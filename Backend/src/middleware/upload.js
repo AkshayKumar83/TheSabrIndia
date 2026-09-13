@@ -9,6 +9,8 @@ function createImageUpload({
   fieldName = 'image',
   bodyField = 'imageUrl',
   urlPrefix = '/uploads',
+  multiple = false,
+  maxCount = 10,
 } = {}) {
 
   const upload = multer({
@@ -21,17 +23,26 @@ function createImageUpload({
       return callback(null, true);
     },
     limits: { fileSize: 5 * 1024 * 1024 },
-  }).single(fieldName);
+  });
+
+  const uploadHandler = multiple ? upload.array(fieldName, maxCount) : upload.single(fieldName);
 
   return (req, res, next) => {
-    upload(req, res, (error) => {
+    uploadHandler(req, res, (error) => {
+      console.log('Uploaded files:', error);
       if (error) {
         return res.status(400).json({ message: error.message });
       }
-
+    console.log('Uploaded files:', req.files, req.body);
       if (req.file) {
+        
         req.body = req.body || {};
         req.body[bodyField] = `${urlPrefix}/${folder}/${req.file.filename}`;
+      }
+
+      if (req.files) {
+        req.body = req.body || {};
+        req.body[bodyField] = req.files.map((file) => `${urlPrefix}/${folder}/${file.filename}`);
       }
 
       return next();
