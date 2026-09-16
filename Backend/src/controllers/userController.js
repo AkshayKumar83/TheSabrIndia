@@ -5,7 +5,7 @@ import prisma from '../../lib/prisma.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'change-this-development-secret';
 
 function createToken(user) {
-  return jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, {
+  return jwt.sign({ uId: user.id, email: user.email, role:"USER" }, JWT_SECRET, {
     expiresIn: '7d',
   });
 }
