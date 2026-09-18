@@ -7,6 +7,8 @@ import categoryRoutes from './src/routes/categoryRoutes.js';
 import productRoutes from './src/routes/productRoutes.js';
 import { notFoundHandler } from './utils/middleware.js';
 import CartRouter from './src/routes/cartRoutes.js';
+import OrderRouter from './src/routes/orderRoutes.js';
+import AddressRouter from './src/routes/addressRoutes.js';
 
 dotenv.config();
 
@@ -26,6 +28,9 @@ app.use('/api/cart', CartRouter);
 app.use('/api/admin', adminRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
+app.use("/api/orders",OrderRouter);
+app.use("/api/address",AddressRouter);
+
 app.use(notFoundHandler);
 
 app.use((error, req, res, next) => {
