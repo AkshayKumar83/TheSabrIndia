@@ -9,6 +9,7 @@ import { notFoundHandler } from './utils/middleware.js';
 import CartRouter from './src/routes/cartRoutes.js';
 import OrderRouter from './src/routes/orderRoutes.js';
 import AddressRouter from './src/routes/addressRoutes.js';
+import profileRouter from './src/routes/profileRoutes.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use("/api/orders",OrderRouter);
 app.use("/api/address",AddressRouter);
+app.use("/api/profile",profileRouter);
 
 app.use(notFoundHandler);
 
