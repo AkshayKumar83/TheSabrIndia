@@ -15,6 +15,7 @@ import {
   deleteProductVariant,
   deleteProduct,
   uploadProductImages,
+  listVariantbyCategory,
 } from '../controllers/productController.js';
 import { createImageUpload } from '../middleware/upload.js';
 
@@ -27,6 +28,10 @@ const uploadProductImagesMiddleware = createImageUpload({
   multiple: true,
   maxCount: 10,
 });
+
+//here
+router.get('/category-collections', listVariantbyCategory);
+
 
 router.post('/images', uploadProductImagesMiddleware, uploadProductImages);
 router.post('/variants', addProductVariant);
@@ -48,5 +53,8 @@ router.post('/', createProduct);
 router.put('/update/:id', updateProductOnly);
 router.put('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
+
+//here
+router.get('/category-collections', listVariantbyCategory);
 
 export default router;

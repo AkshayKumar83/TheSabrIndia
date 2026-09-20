@@ -342,7 +342,13 @@ async function listProductVariantsByProduct(req, res) {
 
 		const variants = await prisma.productVariant.findMany({
 			where: productId ? { productId } : undefined,
-			include: { product: true },
+			include: { product: 
+				{
+					include:{
+						category:true
+					}	
+				}
+			 },
 			orderBy: { createdAt: 'desc' },
 		});
 
@@ -473,6 +479,65 @@ function uploadProductImages(req, res) {
 	});
 }
 
+async function listVariantbyCategory(req, res) {
+  try {
+    const categoryName = req.query.category;
+    if (!categoryName) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category name",
+      });
+    }
+    const variants = await prisma.productVariant.findMany({
+      where: {
+        product: {
+          category: {
+            name: categoryName,
+          },
+        },
+      },
+      select: {
+        id: true,
+		productId:true,
+        name: true,
+        description: true,
+        color: true,
+        price: true,
+        inStock: true,
+        images: true,
+        product: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            skuNo: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+    return res.json({
+	  message:"Products list found successfully",
+      success: true,
+      variants,
+    });
+  } catch (error) {
+    console.error("List variants by category error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch variants",
+    });
+  }
+}
+
 export {
 	listProducts,
 	getProduct,
@@ -489,4 +554,5 @@ export {
 	deleteProductVariant,
 	deleteProduct,
 	uploadProductImages,
+	listVariantbyCategory
 };
